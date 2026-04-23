@@ -1,0 +1,24 @@
+# Sistema Inteligente Cartola FC — MVP
+# Python >= 3.11 recomendado
+
+# ── HTTP & parsing ─────────────────────────────────────────────────────────────
+requests>=2.31.0
+urllib3>=2.0.0
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+pandas>=2.1.0
+numpy>=1.26.0
+pyarrow>=14.0.0          # para leitura/escrita de Parquet
+
+# ── Machine Learning ───────────────────────────────────────────────────────────
+scikit-learn>=1.4.0
+xgboost>=2.0.0           # opcional; o sistema usa RandomForest como fallback
+
+# ── Otimização ────────────────────────────────────────────────────────────────
+scipy>=1.11.0
+
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+streamlit>=1.32.0
+
+# ── Utilitários ───────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0     # para variáveis de ambiente futuras (Fase 2)

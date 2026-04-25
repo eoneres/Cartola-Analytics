@@ -139,7 +139,22 @@ def etapa_historico(rodada_inicio: int, rodada_fim: int) -> pd.DataFrame:
         frames.append(df_rodada)
 
     if not frames:
-        logger.warning("Nenhum dado histórico encontrado.")
+        logger.warning("Nenhum dado histórico encontrado na API.")
+        logger.info("Gerando dados sintéticos como fallback...")
+        try:
+            import subprocess, sys
+            subprocess.run(
+                [sys.executable, "scripts/gerar_dados_sinteticos.py",
+                 "--rodadas", str(rodada_fim - rodada_inicio + 1)],
+                check=True
+            )
+            hist_path = PROCESSED_DIR / "historico_completo.parquet"
+            if hist_path.exists():
+                df_sintetico = pd.read_parquet(hist_path)
+                logger.info("Dados sintéticos carregados: %d registros.", len(df_sintetico))
+                return df_sintetico
+        except Exception as e:
+            logger.error("Falha ao gerar dados sintéticos: %s", e)
         return pd.DataFrame()
 
     df_total = pd.concat(frames, ignore_index=True)

@@ -23,6 +23,8 @@ RODADA_INICIAL  = 1
 CARTOLA_BASE_URL    = "https://api.cartola.globo.com"
 CARTOLA_MERCADO_URL = f"{CARTOLA_BASE_URL}/mercado/status"
 CARTOLA_ATLETAS_URL = f"{CARTOLA_BASE_URL}/atletas/mercado"
+# Endpoint correto: path param  /atletas/pontuados/{rodada}
+# O formato legado ?rodada=N retorna corpo vazio desde 2024
 CARTOLA_PONTUADOS_URL = f"{CARTOLA_BASE_URL}/atletas/pontuados"
 CARTOLA_PARTIDAS_URL  = f"{CARTOLA_BASE_URL}/partidas"
 

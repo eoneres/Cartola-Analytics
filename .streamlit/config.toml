@@ -1,0 +1,16 @@
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+# Desabilita o watcher de módulos — elimina os erros de torchvision/transformers
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#0F6E56"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#1A1F2E"
+textColor = "#FAFAFA"

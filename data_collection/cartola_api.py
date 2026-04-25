@@ -140,6 +140,10 @@ def buscar_atletas_pontuados(rodada: int, usar_cache: bool = True) -> list[dict]
     """
     Retorna pontuação detalhada dos atletas em uma rodada específica.
 
+    Tenta duas variações do endpoint:
+      1. Path param: /atletas/pontuados/{rodada}   (formato atual, 2024+)
+      2. Query param: /atletas/pontuados?rodada=N  (formato legado — fallback)
+
     Inclui scouts individuais (gols, assistências, desarmes, etc.).
     """
     cache_key = f"pontuados_r{rodada}"
@@ -149,8 +153,33 @@ def buscar_atletas_pontuados(rodada: int, usar_cache: bool = True) -> list[dict]
             return cached
 
     logger.info("Buscando atletas pontuados — rodada %d...", rodada)
-    dados = _get(CARTOLA_PONTUADOS_URL, params={"rodada": rodada})
-    atletas = list(dados.get("atletas", {}).values())
+    dados: dict | list = {}
+
+    # Tentativa 1: path param (formato atual da API Cartola 2024+)
+    try:
+        url_path = f"{CARTOLA_PONTUADOS_URL}/{rodada}"
+        resp = _SESSION.get(url_path, timeout=HTTP_TIMEOUT)
+        resp.raise_for_status()
+        if resp.text.strip():
+            dados = resp.json()
+    except Exception as e:
+        logger.debug("Path-param falhou para rodada %d: %s", rodada, e)
+
+    # Tentativa 2: query param legado (fallback)
+    if not dados:
+        try:
+            resp = _SESSION.get(CARTOLA_PONTUADOS_URL, params={"rodada": rodada},
+                                timeout=HTTP_TIMEOUT)
+            resp.raise_for_status()
+            if resp.text.strip():
+                dados = resp.json()
+        except Exception as e:
+            logger.debug("Query-param falhou para rodada %d: %s", rodada, e)
+
+    if not dados:
+        raise ValueError(f"API retornou corpo vazio para rodada {rodada}")
+
+    atletas = list(dados.get("atletas", {}).values()) if isinstance(dados, dict) else dados
     _salvar_cache(cache_key, atletas)
     logger.info("%d atletas pontuados na rodada %d.", len(atletas), rodada)
     return atletas

@@ -20,5 +20,18 @@ scipy>=1.11.0
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 streamlit>=1.32.0
 
+# ── Análise de sentimento (Fase 2) ────────────────────────────────────────────
+beautifulsoup4>=4.12.0   # scraping de notícias
+transformers>=4.38.0     # modelos BERT (opcional — fallback para VADER sem ele)
+torch>=2.1.0             # backend do transformers (opcional)
+# Alternativa sem GPU: pip install transformers[tf] para usar TensorFlow
+
 # ── Utilitários ───────────────────────────────────────────────────────────────
-python-dotenv>=1.0.0     # para variáveis de ambiente futuras (Fase 2)
+python-dotenv>=1.0.0     # variáveis de ambiente (TWITTER_BEARER_TOKEN etc.)
+
+# ── Fase 3 — Personalização & API ─────────────────────────────────────────────
+sqlalchemy>=2.0.0         # ORM para perfis de usuário (SQLite local)
+fastapi>=0.110.0          # API REST
+uvicorn[standard]>=0.27.0 # servidor ASGI para FastAPI
+apscheduler>=3.10.0       # agendamento de jobs automáticos
+pydantic>=2.6.0           # validação de schemas da API

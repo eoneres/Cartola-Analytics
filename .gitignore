@@ -1,0 +1,105 @@
+# =============================================================================
+#  .gitignore — Cartola FC Analytics
+# =============================================================================
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ── Ambientes virtuais ────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.local
+.env.*.local
+
+# ── Credenciais e segredos ────────────────────────────────────────────────────
+# Manter .env.example mas ignorar o .env real com credenciais
+.env
+!.env.example
+
+# ── Dados gerados (nunca commitar — podem ser grandes e são regeneráveis) ─────
+data/raw/
+data/processed/
+data/cache/
+
+# Banco SQLite e arquivos temporários do SQLite (WAL mode)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+*.db-shm
+*.db-wal
+
+# Manter a estrutura de pastas com .gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/processed/sentiment/.gitkeep
+!data/cache/.gitkeep
+
+# ── Modelos treinados (binários grandes, regeneráveis) ────────────────────────
+models/*.pkl
+models/*.joblib
+models/*.bin
+models/registry/
+# Manter metrics.json e pesos_sugeridos.json se quiser versionar
+# (remova as linhas abaixo para commitar as métricas)
+models/metrics.json
+models/pesos_sugeridos.json
+
+# Manter estrutura
+!models/.gitkeep
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ── Jupyter / IPython ─────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Streamlit ────────────────────────────────────────────────────────────────
+# Manter .streamlit/config.toml (configuração do servidor — deve ser versionado)
+# Ignorar apenas cache interno do Streamlit
+.streamlit/secrets.toml
+
+# ── IDEs e editores ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Testes e cobertura ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── Temporários do OS ─────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

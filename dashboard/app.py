@@ -2,13 +2,27 @@
 dashboard/app.py
 Dashboard interativo do sistema Cartola FC MVP.
 Execute com: streamlit run dashboard/app.py
+
+No GitHub Codespaces, use:
+  streamlit run dashboard/app.py \
+    --server.headless true \
+    --server.enableCORS false \
+    --server.enableXsrfProtection false
+Ou simplesmente execute: bash setup.sh --only-dash
 """
 
+import os
 import sys
 from pathlib import Path
 
 # Garante que o projeto raiz está no path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Corrige aviso de CORS no GitHub Codespaces (tunnel cross-origin)
+# Essas variáveis são lidas pelo Streamlit antes da inicialização do servidor
+os.environ.setdefault("STREAMLIT_SERVER_ENABLE_CORS", "false")
+os.environ.setdefault("STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION", "false")
+os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "true")
 
 import pandas as pd
 import streamlit as st
@@ -16,6 +30,8 @@ import streamlit as st
 from config.settings import DATA_DIR, ESCALACAO_SLOTS, MODELS_DIR, ORCAMENTO_PADRAO, POSICOES
 from model.predictor import gerar_alertas, otimizar_escalacao
 from model.trainer import carregar_metricas
+from sentiment.dashboard_page import render as render_sentimento
+from dashboard.fase3_page import render as render_fase3
 
 # ── Configuração da página ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -57,12 +73,12 @@ def _badge(texto: str, cor: str = "#0F6E56") -> str:
 
 with st.sidebar:
     st.title("⚽ Cartola FC")
-    st.caption("Sistema Inteligente — MVP")
+    st.caption("Sistema Inteligente — Fase 3")
     st.divider()
 
     pagina = st.radio(
         "Navegação",
-        ["Ranking de Jogadores", "Montar Escalação", "Alertas", "Métricas do Modelo"],
+        ["Ranking de Jogadores", "Montar Escalação", "Alertas", "Sentimento", "Fase 3 · Personalização", "Métricas do Modelo"],
         label_visibility="collapsed",
     )
 
@@ -316,3 +332,12 @@ elif pagina == "Métricas do Modelo":
             "importancia", ascending=True
         )
         st.bar_chart(df_fi.set_index("feature")["importancia"], horizontal=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PÁGINA 5 — Análise de Sentimento (Fase 2)
+# ══════════════════════════════════════════════════════════════════════════════
+elif pagina == "Sentimento":
+    render_sentimento()
+
+elif pagina == "Fase 3 · Personalização":
+    render_fase3()

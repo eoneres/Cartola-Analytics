@@ -27,7 +27,7 @@ os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "true")
 import pandas as pd
 import streamlit as st
 
-from config.settings import DATA_DIR, ESCALACAO_SLOTS, MODELS_DIR, ORCAMENTO_PADRAO, POSICOES
+from config.settings import DATA_DIR, ESCALACAO_SLOTS, FORMACOES, FORMACAO_PADRAO, MODELS_DIR, ORCAMENTO_PADRAO, POSICOES
 from model.predictor import gerar_alertas, otimizar_escalacao
 from model.trainer import carregar_metricas
 from sentiment.dashboard_page import render as render_sentimento
@@ -208,6 +208,52 @@ elif pagina == "Montar Escalação":
     if SEM_DADOS:
         st.stop()
 
+    # ── Seletor de formação ───────────────────────────────────────────────────
+    st.subheader("1. Escolha a formação")
+
+    nomes_formacao = list(FORMACOES.keys())
+    idx_padrao = nomes_formacao.index(FORMACAO_PADRAO) if FORMACAO_PADRAO in nomes_formacao else 0
+
+    # Grid visual com botões de formação (5 por linha)
+    COLS_POR_LINHA = 5
+    linhas = [nomes_formacao[i:i+COLS_POR_LINHA] for i in range(0, len(nomes_formacao), COLS_POR_LINHA)]
+
+    if "formacao_selecionada" not in st.session_state:
+        st.session_state.formacao_selecionada = FORMACAO_PADRAO
+
+    for linha in linhas:
+        cols_form = st.columns(len(linha))
+        for col, nome in zip(cols_form, linha):
+            ativo = st.session_state.formacao_selecionada == nome
+            label = f"**{nome}**" if ativo else nome
+            if col.button(label, key=f"btn_form_{nome}", use_container_width=True,
+                          type="primary" if ativo else "secondary"):
+                st.session_state.formacao_selecionada = nome
+
+    formacao_escolhida = st.session_state.formacao_selecionada
+    info_form = FORMACOES[formacao_escolhida]
+
+    # Preview da formação selecionada
+    with st.container():
+        slots = info_form["slots"]
+        st.caption(f"📋 {info_form['descricao']}")
+
+        # Linha de badges por posição
+        icones = {"Goleiro": "🧤", "Lateral": "🔁", "Zagueiro": "🛡️", "Meia": "⚙️", "Atacante": "⚽", "Técnico": "📋"}
+        badges = "  ".join(
+            f"{icones.get(pos, '')} **{qtd}× {pos}**"
+            for pos, qtd in slots.items() if qtd > 0
+        )
+        st.markdown(badges)
+        total_linha = sum(v for k, v in slots.items() if k not in ("Goleiro", "Técnico"))
+        total_time  = sum(slots.values())
+        st.caption(f"Total: {total_time} jogadores  •  {total_linha} de linha")
+
+    st.divider()
+
+    # ── Parâmetros ────────────────────────────────────────────────────────────
+    st.subheader("2. Configure os parâmetros")
+
     col1, col2, col3 = st.columns(3)
     with col1:
         perfil = st.selectbox(
@@ -229,46 +275,67 @@ elif pagina == "Montar Escalação":
     with col3:
         st.write("")
         st.write("")
-        gerar = st.button("Gerar escalação", type="primary", use_container_width=True)
+        gerar = st.button("⚽ Gerar escalação", type="primary", use_container_width=True)
 
+    # ── Resultado ─────────────────────────────────────────────────────────────
     if gerar:
         with st.spinner("Otimizando escalação..."):
             df_escal = otimizar_escalacao(
-                df_prev, orcamento=orcamento, perfil=perfil
+                df_prev,
+                orcamento=orcamento,
+                perfil=perfil,
+                formacao=formacao_escolhida,
             )
 
         if df_escal.empty:
-            st.error("Não foi possível montar uma escalação com esses parâmetros.")
+            st.error("Não foi possível montar uma escalação com esses parâmetros. "
+                     "Tente aumentar o orçamento ou mudar a formação.")
         else:
-            st.success(f"Escalação gerada! {len(df_escal)} jogadores selecionados.")
-
-            # Sumário
-            custo_total = df_escal["preco"].sum() if "preco" in df_escal.columns else 0
+            custo_total   = df_escal["preco"].sum() if "preco" in df_escal.columns else 0
             pts_esperados = df_escal["pontuacao_prevista"].sum() if "pontuacao_prevista" in df_escal.columns else 0
-            sa, sb, sc = st.columns(3)
-            sa.metric("Custo total", f"C$ {custo_total:.1f}")
-            sb.metric("Saldo restante", f"C$ {orcamento - custo_total:.1f}")
-            sc.metric("Pontuação esperada", f"{pts_esperados:.1f} pts")
+
+            st.success(f"✅ Escalação **{formacao_escolhida}** gerada com {len(df_escal)} jogadores!")
+
+            sa, sb, sc, sd = st.columns(4)
+            sa.metric("Formação",         formacao_escolhida)
+            sb.metric("Custo total",      f"C$ {custo_total:.1f}")
+            sc.metric("Saldo restante",   f"C$ {orcamento - custo_total:.1f}")
+            sd.metric("Pontuação esperada", f"{pts_esperados:.1f} pts")
 
             st.divider()
+            st.subheader("3. Jogadores selecionados")
 
-            # Tabela por posição
-            for posicao in ESCALACAO_SLOTS:
+            # Ordem de exibição: Goleiro → Lateral → Zagueiro → Meia → Atacante → Técnico
+            ORDEM_POSICAO = ["Goleiro", "Lateral", "Zagueiro", "Meia", "Atacante", "Técnico"]
+            icones_pos = {"Goleiro": "🧤", "Lateral": "🔁", "Zagueiro": "🛡️",
+                          "Meia": "⚙️", "Atacante": "⚽", "Técnico": "📋"}
+
+            for posicao in ORDEM_POSICAO:
                 subset = df_escal[df_escal["posicao"] == posicao]
                 if subset.empty:
                     continue
-                st.subheader(posicao)
+                icone = icones_pos.get(posicao, "")
+                st.markdown(f"#### {icone} {posicao}")
                 cols_esc = [c for c in
                     ["apelido", "preco", "pontuacao_prevista", "score_composto", "justificativa"]
                     if c in subset.columns]
-                st.dataframe(subset[cols_esc], hide_index=True, use_container_width=True)
+                st.dataframe(
+                    subset[cols_esc].rename(columns={
+                        "apelido": "Jogador", "preco": "Preço (C$)",
+                        "pontuacao_prevista": "Pts previstos",
+                        "score_composto": "Score",
+                        "justificativa": "Por quê?",
+                    }),
+                    hide_index=True, use_container_width=True,
+                )
 
             # Download
+            st.divider()
             csv = df_escal.to_csv(index=False).encode("utf-8")
             st.download_button(
-                "Baixar escalação (CSV)",
+                "⬇️ Baixar escalação (CSV)",
                 data=csv,
-                file_name=f"escalacao_{perfil}.csv",
+                file_name=f"escalacao_{formacao_escolhida}_{perfil}.csv",
                 mime="text/csv",
             )
 

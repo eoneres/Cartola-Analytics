@@ -18,6 +18,8 @@ from scipy.optimize import linprog
 
 from config.settings import (
     ESCALACAO_SLOTS,
+    FORMACOES,
+    FORMACAO_PADRAO,
     MAX_JOGADORES_TIME,
     ORCAMENTO_PADRAO,
     PERFIS,
@@ -133,7 +135,7 @@ def otimizar_escalacao(
     df_previsoes: pd.DataFrame,
     orcamento: float = ORCAMENTO_PADRAO,
     perfil: str = "balanceado",
-    formacao: dict | None = None,
+    formacao: str | dict | None = None,
 ) -> pd.DataFrame:
     """
     Seleciona a escalação ótima usando programação linear (greedy + restrições).
@@ -143,14 +145,29 @@ def otimizar_escalacao(
     df_previsoes : resultado de prever_pontuacoes()
     orcamento    : limite em cartoletas
     perfil       : 'conservador' | 'balanceado' | 'agressivo'
-    formacao     : dict com slots por posição (padrão: ESCALACAO_SLOTS)
+    formacao     : nome da formação (ex: "4-3-3") ou dict de slots personalizados.
+                   Se None, usa FORMACAO_PADRAO definida em settings.py.
 
     Retorna
     -------
     DataFrame com os jogadores selecionados e justificativa.
     """
+    # Resolver formação: nome → dict de slots
     if formacao is None:
-        formacao = ESCALACAO_SLOTS
+        formacao_slots = FORMACOES[FORMACAO_PADRAO]["slots"]
+        formacao_nome  = FORMACAO_PADRAO
+    elif isinstance(formacao, str):
+        if formacao not in FORMACOES:
+            logger.warning("Formação '%s' desconhecida. Usando %s.", formacao, FORMACAO_PADRAO)
+            formacao = FORMACAO_PADRAO
+        formacao_slots = FORMACOES[formacao]["slots"]
+        formacao_nome  = formacao
+    else:
+        # dict personalizado passado diretamente
+        formacao_slots = formacao
+        formacao_nome  = "personalizada"
+
+    formacao = formacao_slots
 
     config     = PERFIS.get(perfil, PERFIS["balanceado"])
     min_preco  = config["min_preco"]
@@ -197,8 +214,8 @@ def otimizar_escalacao(
     df_escal["justificativa"] = df_escal.apply(_justificativa, axis=1)
 
     logger.info(
-        "Escalação otimizada (%s): %d jogadores | custo total: C$%.1f",
-        perfil, len(df_escal),
+        "Escalação otimizada (%s | %s): %d jogadores | custo total: C$%.1f",
+        perfil, formacao_nome, len(df_escal),
         df_previsoes.loc[df_escal.index, "preco"].sum() if "preco" in df_previsoes.columns else 0,
     )
     return df_escal[["apelido","posicao","clube_id","preco",

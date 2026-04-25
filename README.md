@@ -464,3 +464,9 @@ Cartola-Analytics/
 5. Abra um Pull Request
 
 ---
+
+<div align="center">
+
+Desenvolvido com Python · XGBoost · BERT · FastAPI · Streamlit
+
+</div>

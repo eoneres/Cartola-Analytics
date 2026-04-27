@@ -1,71 +1,45 @@
 # =============================================================================
-#  render.yaml — Cartola FC Analytics
-#  Blueprint declarativo: define todos os serviços e o Disk persistente.
+#  render.yaml — Cartola FC Analytics (plano Free — sem Disk)
 #
-#  Como usar:
-#    1. Suba este repositório no GitHub
-#    2. No Render: New → Blueprint → conecte o repositório
-#    3. O Render lê este arquivo e cria tudo automaticamente
+#  No plano gratuito o Render não suporta Persistent Disk.
+#  Os dados são gerados dentro do container a cada deploy (~3-4 min).
+#  Para persistência real, faça upgrade para o plano Starter ($7/mês)
+#  e descomente o bloco "disk:" abaixo.
 # =============================================================================
 
 services:
 
-  # ── Serviço 1: Dashboard Streamlit ─────────────────────────────────────────
   - type: web
     name: cartola-dashboard
     runtime: docker
     dockerfilePath: ./Dockerfile
-    region: oregon          # oregon (US West) ou frankfurt (Europa)
-    plan: free              # free | starter ($7/mês) | standard ($25/mês)
+    region: oregon
+    plan: free
     branch: main
 
-    # Variáveis de ambiente injetadas no container
     envVars:
+      # Sem Disk: paths apontam para dentro do container (ephemeral)
       - key: RENDER_DISK_PATH
-        value: /var/data
+        value: /app/data
       - key: RENDER_MODELS_PATH
-        value: /var/data/models
+        value: /app/models
       - key: RENDER_LOGS_PATH
-        value: /var/data/logs
+        value: /app/logs
       - key: PYTHONUNBUFFERED
         value: "1"
-      # Credenciais opcionais — configure manualmente no painel do Render
-      # (nunca commitar valores reais aqui)
       - key: TWITTER_BEARER_TOKEN
-        sync: false         # o Render pedirá o valor manualmente
+        sync: false
       - key: REDDIT_CLIENT_ID
         sync: false
       - key: REDDIT_CLIENT_SECRET
         sync: false
 
-    # Health check — Render verifica se o serviço está respondendo
     healthCheckPath: /_stcore/health
 
-    # Disk persistente montado em /var/data
-    # Aqui ficam: parquets, modelos .pkl, banco SQLite, logs
-    disk:
-      name: cartola-data
-      mountPath: /var/data
-      sizeGB: 1             # 1GB gratuito no plano free
-
-  # ── Serviço 2: API FastAPI (opcional) ──────────────────────────────────────
-  # Descomente para subir a API REST separadamente.
-  # Se quiser tudo em um serviço só, comente esta seção.
-  #
-  # - type: web
-  #   name: cartola-api
-  #   runtime: docker
-  #   dockerfilePath: ./Dockerfile.api
-  #   region: oregon
-  #   plan: free
-  #   branch: main
-  #   startCommand: uvicorn api.app:app --host 0.0.0.0 --port $PORT
-  #   envVars:
-  #     - key: RENDER_DISK_PATH
-  #       value: /var/data
-  #     - key: RENDER_MODELS_PATH
-  #       value: /var/data/models
-  #   disk:
-  #     name: cartola-data        # mesmo Disk do dashboard (compartilhado)
-  #     mountPath: /var/data
-  #     sizeGB: 1
+    # ── Para persistência (plano Starter+), descomente: ──────────────────────
+    # disk:
+    #   name: cartola-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+    # E troque os RENDER_DISK_PATH / RENDER_MODELS_PATH / RENDER_LOGS_PATH
+    # para /var/data, /var/data/models e /var/data/logs respectivamente.

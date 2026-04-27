@@ -1,22 +1,25 @@
 # =============================================================================
-#  Dockerfile — Cartola FC Analytics (Streamlit + FastAPI)
-#  Usado pelo Render para construir a imagem do serviço.
+#  Dockerfile — Cartola FC Analytics
+#  Plano Free do Render: sem Disk persistente.
+#  Os dados são gerados no BUILD (docker build) e ficam dentro da imagem.
+#  A cada novo deploy os dados são regenerados automaticamente.
 # =============================================================================
 
 FROM python:3.12-slim
 
-# Evita prompts interativos durante instalação
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    # Paths internos ao container (sobrescritos pelo render.yaml)
+    RENDER_DISK_PATH=/app/data \
+    RENDER_MODELS_PATH=/app/models \
+    RENDER_LOGS_PATH=/app/logs
 
-# Diretório de trabalho
 WORKDIR /app
 
-# Dependências do sistema (mínimas)
+# Dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    git \
+    curl git \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala dependências Python
@@ -24,14 +27,19 @@ COPY requirements-render.txt .
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements-render.txt
 
-# Copia o projeto inteiro
+# Copia o projeto
 COPY . .
 
-# Cria pastas locais como fallback (sobrescritas pelo Disk em produção)
-RUN mkdir -p data/raw data/processed/sentiment data/cache models/registry logs
+# Cria estrutura de pastas
+RUN mkdir -p data/raw data/processed/sentiment data/cache \
+             models/registry logs
 
-# Porta do Streamlit
+# Pré-gera todos os dados durante o build
+# (mercado sintético + histórico + modelo + previsões + sentimento)
+# Isso garante que o container sobe com dados prontos imediatamente.
+RUN python scripts/popular_dashboard.py --rodadas 14 || \
+    echo "Aviso: popular_dashboard falhou, dados serão gerados no start"
+
 EXPOSE 8501
 
-# Script de inicialização: popula dados se necessário e sobe o dashboard
 CMD ["bash", "render_start.sh"]

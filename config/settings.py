@@ -4,15 +4,19 @@ Configurações centrais do sistema Cartola FC MVP.
 Edite este arquivo para ajustar o comportamento do sistema.
 """
 
+import os
 from pathlib import Path
 
 # ── Diretórios ────────────────────────────────────────────────────────────────
-BASE_DIR   = Path(__file__).resolve().parent.parent
-DATA_DIR   = BASE_DIR / "data"
-MODELS_DIR = BASE_DIR / "models"
-LOGS_DIR   = BASE_DIR / "logs"
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-for d in [DATA_DIR, MODELS_DIR, LOGS_DIR]:
+# No Render: RENDER_DISK_PATH aponta para o Persistent Disk (/var/data).
+# Localmente: usa data/ e models/ dentro do projeto.
+DATA_DIR   = Path(os.environ.get("RENDER_DISK_PATH",   str(BASE_DIR / "data")))
+MODELS_DIR = Path(os.environ.get("RENDER_MODELS_PATH", str(BASE_DIR / "models")))
+LOGS_DIR   = Path(os.environ.get("RENDER_LOGS_PATH",   str(BASE_DIR / "logs")))
+
+for d in [DATA_DIR, MODELS_DIR, LOGS_DIR, DATA_DIR / "processed", DATA_DIR / "processed" / "sentiment"]:
     d.mkdir(parents=True, exist_ok=True)
 
 # ── Temporada ─────────────────────────────────────────────────────────────────

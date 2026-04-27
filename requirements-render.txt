@@ -1,0 +1,37 @@
+# =============================================================================
+#  requirements-render.txt
+#  Dependências para deploy no Render (sem torch/transformers — muito grandes).
+#  Análise de sentimento usa VADER automaticamente como fallback.
+# =============================================================================
+
+# ── HTTP & parsing ────────────────────────────────────────────────────────────
+requests>=2.31.0
+urllib3>=2.0.0
+beautifulsoup4>=4.12.0
+
+# ── Data ─────────────────────────────────────────────────────────────────────
+pandas>=2.1.0
+numpy>=1.26.0
+pyarrow>=14.0.0
+
+# ── Machine Learning ──────────────────────────────────────────────────────────
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+scipy>=1.11.0
+
+# ── Sentimento (VADER — leve, sem GPU) ───────────────────────────────────────
+vaderSentiment>=3.3.2
+
+# ── Dashboard ────────────────────────────────────────────────────────────────
+streamlit>=1.32.0
+
+# ── API & scheduler ───────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+apscheduler>=3.10.0
+pydantic>=2.6.0
+sqlalchemy>=2.0.0
+
+# ── Utilitários ───────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+gunicorn>=21.2.0

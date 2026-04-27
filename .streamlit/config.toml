@@ -1,16 +1,28 @@
+# .streamlit/config.toml
+# Configurações do servidor Streamlit
+# Válidas tanto para desenvolvimento local quanto para produção no Render.
+
 [server]
 headless = true
 enableCORS = false
 enableXsrfProtection = false
-# Desabilita o watcher de módulos — elimina os erros de torchvision/transformers
-fileWatcherType = "none"
+address = "0.0.0.0"
+# A porta é passada via --server.port na linha de comando (render_start.sh)
+# mas definimos 8501 como padrão local
+port = 8501
+maxUploadSize = 10           # MB — limite de upload de arquivos
+enableWebsocketCompression = true
 
 [browser]
 gatherUsageStats = false
+serverAddress = "0.0.0.0"
 
 [theme]
-base = "dark"
-primaryColor = "#0F6E56"
+primaryColor = "#00B140"
 backgroundColor = "#0E1117"
 secondaryBackgroundColor = "#1A1F2E"
 textColor = "#FAFAFA"
+font = "sans serif"
+
+[logger]
+level = "warning"            # reduz ruído nos logs do Render

@@ -33,6 +33,12 @@ from model.trainer import carregar_metricas
 from sentiment.dashboard_page import render as render_sentimento
 from dashboard.fase3_page import render as render_fase3
 
+# ── Health check para o Render ────────────────────────────────────────────────
+# O Render bate em /healthz para saber se o serviço está vivo.
+# O Streamlit não expõe rotas HTTP customizadas nativamente, então usamos
+# o endpoint interno /_stcore/health que o Streamlit já fornece.
+# O render.yaml já aponta healthCheckPath para /_stcore/health.
+
 # ── Configuração da página ─────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Cartola FC — Sistema Inteligente",

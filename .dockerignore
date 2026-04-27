@@ -1,0 +1,50 @@
+# =============================================================================
+#  .dockerignore — exclui arquivos desnecessários da imagem Docker
+# =============================================================================
+
+# Ambiente virtual e cache Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Dados gerados localmente (serão lidos do Disk no Render)
+data/raw/
+data/processed/
+data/cache/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Modelos locais (serão lidos do Disk no Render)
+models/*.pkl
+models/*.joblib
+models/registry/
+models/*.json
+
+# Logs
+logs/
+
+# Git e IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Secrets
+.env
+!.env.example
+
+# Docs e scripts de desenvolvimento
+*.md
+Makefile
+setup.sh
+
+# Testes
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
